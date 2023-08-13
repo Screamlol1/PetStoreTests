@@ -70,16 +70,16 @@ class TestPets:
     def test_can_delete_oet(self):
         #       add the pet
         payload = self.new_pet_payload()
-        create_pet_response = self.create_pet(payload)
+        create_pet_response = MyRequests.post("/pet", data=payload)
         Assertions.assert_status_code(create_pet_response, 200, "wrong code expected result 200")
         pet_id = create_pet_response.json()["id"]
-        get_pet_response = self.get_pet(pet_id)
+        get_pet_response = MyRequests.get(f"/pet/{pet_id}")
         Assertions.assert_status_code(get_pet_response, 200, "wrong code expected result 200")
         #       delete the pet
-        delete_pet_response = self.delete_pet(pet_id)
+        delete_pet_response = MyRequests.delete(f"/pet/{pet_id}")
         Assertions.assert_status_code(delete_pet_response, 200, "wrong code expected result 200")
         #       get the pet and check that it's not found
-        get_pet_response = self.get_pet(pet_id)
+        get_pet_response = MyRequests.get(f"/pet/{pet_id}")
         Assertions.assert_status_code(get_pet_response, 404, "wrong code expected result 404")
 
     def create_pet(self, payload):
