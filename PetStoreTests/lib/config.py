@@ -1,18 +1,13 @@
-from requests import Response
-
-
-class BaseCase:
-    def get_cookie(self, response: Response, cookie_name):
-        assert cookie_name in response.cookies, f"Cannot find cookie with name {cookie_name}"
-        return response.cookies[cookie_name]
-
-    def get_header(self, response: Response, header_name):
-        assert header_name in response.headers, f"Cannot find header with name {header_name}"
-        return response.headers[header_name]
+import random
 
 
 class Payloads:
-    def new_payload(self, case, some_id):
+    @staticmethod
+    def id_generator():
+        return random.randint(100000, 999999)
+
+    @staticmethod
+    def new_payload(case, some_id):
         if case == "PET":
             return {
                 "id": some_id,
@@ -39,11 +34,11 @@ class Payloads:
                 "quantity": 0,
                 "shipDate": "2023-08-10T22:43:07.630Z",
                 "status": "placed",
-                "complete": true
+                "complete": "true"
             }
         elif case == "USER":
             return {
-                "id": 9776753495,
+                "id": some_id,
                 "username": "string1",
                 "firstName": "string",
                 "lastName": "string",
@@ -52,4 +47,27 @@ class Payloads:
                 "phone": "string",
                 "userStatus": 1
             }
-        elif case == "LIST":
+        elif case == "EMPTY":
+            return {}
+        elif case == "UPDATED PET":
+            return {
+                "id": some_id,
+                "category": {
+                    "id": 1,
+                    "name": "string"
+                },
+                "name": "updatedtestdoggie",
+                "photoUrls": [
+                    "string"
+                ],
+                "tags": [
+                    {
+                        "id": 1,
+                        "name": "string"
+                    }
+                ],
+                "status": "sold"
+            }
+
+
+

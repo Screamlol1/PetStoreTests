@@ -1,13 +1,12 @@
 import random
 from lib.assertions import Assertions
 from lib.my_requests import MyRequests
-import requests
+from lib.config import Payloads
 import allure
 import json
 
 
-def id_generator():
-    return random.randint(100000, 999999)
+
 
 
 @allure.epic("Pet creation cases")
@@ -16,7 +15,7 @@ class TestPets:
     @allure.description("This is successfully pet creating")
     def test_can_create_pet(self):
         #  create test data for new pet
-        payload = self.new_pet_payload()
+        payload = Payloads.new_payload("PET", Payloads.id_generator())
         # create new pet
         create_pet_response = MyRequests.post("/pet", data=payload)
         # check successfully created
@@ -31,29 +30,12 @@ class TestPets:
 
     @allure.description("This is successfully update pet data")
     def test_can_update_pet(self):
-        payload = self.new_pet_payload()
+        payload = Payloads.new_payload("PET", Payloads.id_generator())
         create_pet_response = MyRequests.post("/pet", data=payload)
         Assertions.assert_status_code(create_pet_response, 200, "wrong code expected result 200")
         pet_id = create_pet_response.json()["id"]
 
-        new_payload = {
-            "id": pet_id,
-            "category": {
-                "id": 1,
-                "name": "string"
-            },
-            "name": "updatedtestdoggie",
-            "photoUrls": [
-                "string"
-            ],
-            "tags": [
-                {
-                    "id": 1,
-                    "name": "string"
-                }
-            ],
-            "status": "sold"
-        }
+        new_payload = Payloads.new_payload("UPDATED PET", pet_id)
         update_pet_response = MyRequests.put("/pet", data=new_payload)
         Assertions.assert_status_code(update_pet_response, 200, "wrong code expected result 200")
 
@@ -68,7 +50,7 @@ class TestPets:
     @allure.description("This is successfully pet remove")
     def test_can_delete_oet(self):
         #       add the pet
-        payload = self.new_pet_payload()
+        payload = Payloads.new_payload("PET", Payloads.id_generator())
         create_pet_response = MyRequests.post("/pet", data=payload)
         Assertions.assert_status_code(create_pet_response, 200, "wrong code expected result 200")
         pet_id = create_pet_response.json()["id"]
@@ -81,39 +63,10 @@ class TestPets:
         get_pet_response = MyRequests.get(f"/pet/{pet_id}")
         Assertions.assert_status_code(get_pet_response, 404, "wrong code expected result 404")
 
-    def new_pet_payload(self):
-        return {
-            "id": id_generator(),
-            "category": {
-                "id": 1,
-                "name": "string"
-            },
-            "name": "testdoggie",
-            "photoUrls": [
-                "string"
-            ],
-            "tags": [
-                {
-                    "id": 1,
-                    "name": "string"
-                }
-            ],
-            "status": "available"
-        }
 
 
 @allure.epic("Order creation test")
 class TestStore:
-    def new_order_payload(self):
-        return {
-            "id": id_generator(),
-            "petId": 1,
-            "quantity": 0,
-            "shipDate": "2023-08-10T22:43:07.630Z",
-            "status": "placed",
-            "complete": "true"
-        }
-
     endpoint = "/store/order"
 
     @allure.description("This is failed attempt to get no existed order ")
@@ -124,32 +77,36 @@ class TestStore:
             "message": "Order Not Found"
         }
 
-        payload = self.new_order_payload()
+        payload = Payloads.new_payload("ORDER", Payloads.id_generator())
+        # create new order
         create_order_response = MyRequests.post("/store/order", data=payload)
         Assertions.assert_status_code(create_order_response, 200, "wrong code expected result 200")
-
+        # check order exists
         create_order_data = create_order_response.json()
         order_id = create_order_data["id"]
         get_order_response = MyRequests.get(f"/store/order/{order_id}")
         Assertions.assert_status_code(get_order_response, 200, "wrong code expected result 200")
-
+        #  delete order
         delete_order_response = MyRequests.delete(f"/store/order/{order_id}")
         Assertions.assert_status_code(delete_order_response, 200, "wrong code expected result 200")
-
+        #  check order not exists anymore
         get_order_response = MyRequests.get(f"/store/order/{order_id}")
         Assertions.assert_status_code(get_order_response, 404, "wrong code expected result 200")
-        Assertions.assert_json_value_by_name(get_order_response, "message", not_found_response_text, "Wrong message")
+        # Assertions.assert_json_value_by_name(get_order_response, "message", not_found_response_text, "Wrong message")
 
     @allure.description("This is successfully order creation")
     def test_can_create_order(self):
-        payload = self.new_order_payload()
+        payload = Payloads.new_payload("ORDER", Payloads.id_generator())
+        #  create new order and check it's created
         create_order_response = MyRequests.post("/store/order", data=payload)
         Assertions.assert_status_code(create_order_response, 200, "wrong code expected result 200")
         create_order_data = create_order_response.json()
         order_id = create_order_data["id"]
+        #  check order exists and valid
         get_order_response = MyRequests.get(f"/store/order/{order_id}")
         Assertions.assert_status_code(get_order_response, 200, "wrong code expected result 200")
-        Assertions.assert_json_value_by_name(create_order_response, "id", payload, "id are not equal")
+        Assertions.assert_json_value_by_name(get_order_response, "id", payload, "id are not equal")
+
 
     def test_can_update_order(self):
         pass

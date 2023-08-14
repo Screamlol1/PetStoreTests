@@ -38,7 +38,7 @@ class MyRequests():
         elif method == 'DELETE':
             response = requests.delete(url, json=data, headers=headers, cookies=cookies)
         else:
-            raise Exception(f"Bad http mthod '{method}' was received")
+            raise Exception(f"Bad http method '{method}' was received")
 
         Logger.add_response(response)
 
