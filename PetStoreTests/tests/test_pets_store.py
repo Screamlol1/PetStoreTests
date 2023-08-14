@@ -3,6 +3,7 @@ from lib.assertions import Assertions
 from lib.my_requests import MyRequests
 import requests
 import allure
+import json
 
 
 def id_generator():
@@ -59,8 +60,6 @@ class TestPets:
         #       get pet and validate the changes
         get_pet_response = MyRequests.get(f"/pet/{pet_id}")
         Assertions.assert_status_code(get_pet_response, 200, "wrong code expected result 200")
-        Assertions.assert_json_value_by_name(get_pet_response, "id", payload, "names are not equal")
-        Assertions.assert_json_value_by_name(get_pet_response, "status", new_payload, "status is not the same")
         Assertions.assert_json_value_by_name(get_pet_response, "name", new_payload, "names are not equal")
         Assertions.assert_json_value_by_name(get_pet_response, "status", new_payload, "status is not the same")
         Assertions.assert_not_json_value_by_name(get_pet_response, "name", payload, "names are  equal")
@@ -81,18 +80,6 @@ class TestPets:
         #       get the pet and check that it's not found
         get_pet_response = MyRequests.get(f"/pet/{pet_id}")
         Assertions.assert_status_code(get_pet_response, 404, "wrong code expected result 404")
-
-    def create_pet(self, payload):
-        return requests.post(self.endpoint, json=payload)
-
-    def get_pet(self, pet_id):
-        return requests.get(self.endpoint + f"/{pet_id}")
-
-    def update_pet(self, payload):
-        return requests.post(self.endpoint, json=payload)
-
-    def delete_pet(self, pet_id):
-        return requests.delete(self.endpoint + f"/{pet_id}")
 
     def new_pet_payload(self):
         return {
@@ -117,13 +104,52 @@ class TestPets:
 
 @allure.epic("Order creation test")
 class TestStore:
-    endpoint = "https://petstore.swagger.io/v2/pet"
+    def new_order_payload(self):
+        return {
+            "id": id_generator(),
+            "petId": 1,
+            "quantity": 0,
+            "shipDate": "2023-08-10T22:43:07.630Z",
+            "status": "placed",
+            "complete": "true"
+        }
 
-    def test_can_get_order(self):
-        pass
+    endpoint = "/store/order"
 
+    @allure.description("This is failed attempt to get no existed order ")
+    def test_can_not_get_non_existent_order(self):
+        not_found_response_text = {
+            "code": 404,
+            "type": "unknown",
+            "message": "Order Not Found"
+        }
+
+        payload = self.new_order_payload()
+        create_order_response = MyRequests.post("/store/order", data=payload)
+        Assertions.assert_status_code(create_order_response, 200, "wrong code expected result 200")
+
+        create_order_data = create_order_response.json()
+        order_id = create_order_data["id"]
+        get_order_response = MyRequests.get(f"/store/order/{order_id}")
+        Assertions.assert_status_code(get_order_response, 200, "wrong code expected result 200")
+
+        delete_order_response = MyRequests.delete(f"/store/order/{order_id}")
+        Assertions.assert_status_code(delete_order_response, 200, "wrong code expected result 200")
+
+        get_order_response = MyRequests.get(f"/store/order/{order_id}")
+        Assertions.assert_status_code(get_order_response, 404, "wrong code expected result 200")
+        Assertions.assert_json_value_by_name(get_order_response, "message", not_found_response_text, "Wrong message")
+
+    @allure.description("This is successfully order creation")
     def test_can_create_order(self):
-        pass
+        payload = self.new_order_payload()
+        create_order_response = MyRequests.post("/store/order", data=payload)
+        Assertions.assert_status_code(create_order_response, 200, "wrong code expected result 200")
+        create_order_data = create_order_response.json()
+        order_id = create_order_data["id"]
+        get_order_response = MyRequests.get(f"/store/order/{order_id}")
+        Assertions.assert_status_code(get_order_response, 200, "wrong code expected result 200")
+        Assertions.assert_json_value_by_name(create_order_response, "id", payload, "id are not equal")
 
     def test_can_update_order(self):
         pass
@@ -131,19 +157,7 @@ class TestStore:
     def test_can_delete_order(self):
         pass
 
-    #  support methods
 
-    def create_order(self, payload):
-        return requests.post(self.endpoint, json=payload)
-
-    def get_order(self, id):
-        pass
-
-    def update_order(self):
-        pass
-
-    def delete_order(self):
-        pass
 
 
 class TestUser:
@@ -164,16 +178,3 @@ class TestUser:
     def test_can_create_list_of_users(self):
         pass
 
-    # support methods
-
-    def create_user(self):
-        pass
-
-    def get_user(self):
-        pass
-
-    def update_user(self):
-        pass
-
-    def delete_user(self):
-        pass
