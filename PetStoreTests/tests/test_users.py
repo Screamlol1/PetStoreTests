@@ -5,7 +5,7 @@ import allure
 
 
 class TestUser:
-    endpoint = "https://petstore.swagger.io/v2/pet"
+    endpoint = "https://petstore.swagger.io/v2/user"
 
     def test_can_get_user(self):
         pass
