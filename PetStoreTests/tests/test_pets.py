@@ -4,7 +4,7 @@ from lib.config import Payloads
 import allure
 
 
-@allure.epic("Pet creation cases")
+@allure.epic("Operations with pets")
 class TestPets:
 
     @allure.description("This is successfully pet creating")
