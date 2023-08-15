@@ -55,3 +55,5 @@ class TestPets:
         #       get the pet and check that it's not found
         get_pet_response = MyRequests.get(f"/pet/{pet_id}")
         Assertions.assert_status_code(get_pet_response, 404)
+        Assertions.assert_json_value_has_key(get_pet_response, "message")
+        Assertions.assert_json_value_by_name(get_pet_response,"message", "Pet not found", "wrong text message")

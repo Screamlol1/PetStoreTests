@@ -6,7 +6,6 @@ import allure
 
 @allure.epic("Order creation test")
 class TestStore:
-    endpoint = "/store/order"
 
     @allure.description("This is successfully order creation")
     def test_can_create_order(self):
@@ -42,7 +41,28 @@ class TestStore:
         Assertions.assert_json_value_has_key(get_order_response, "message")
         Assertions.assert_json_value_by_name(get_order_response,"message", "Order not found", "wrong text message")
 
+    def test_delete_non_existent_order(self):
+        payload = Payloads.new_payload("ORDER", Payloads.id_generator())
+        # create new order
+        create_order_response = MyRequests.post("/store/order", data=payload)
+        Assertions.assert_status_code(create_order_response, 200)
+        # check order exists
+        create_order_data = create_order_response.json()
+        order_id = create_order_data["id"]
+        get_order_response = MyRequests.get(f"/store/order/{order_id}")
+        Assertions.assert_status_code(get_order_response, 200)
+        #  delete order
+        delete_order_response = MyRequests.delete(f"/store/order/{order_id}")
+        Assertions.assert_status_code(delete_order_response, 200)
+        # try to delete again
+        delete_order_response = MyRequests.delete(f"/store/order/{order_id}")
+        Assertions.assert_status_code(delete_order_response, 404)
+
+
     def test_can_get_inventory(self):
         create_get_response = MyRequests.get("/store/inventory")
         Assertions.assert_status_code(create_get_response, 200)
+        Assertions.assert_json_value_has_key(create_get_response, "sold")
+        Assertions.assert_json_value_has_key(create_get_response, "available")
+        Assertions.assert_json_value_has_key(create_get_response, "pending")
 
